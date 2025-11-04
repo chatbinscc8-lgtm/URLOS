@@ -32,18 +32,11 @@ class URLChecker:
         
         async with self.semaphore:
             try:
-                # Use HEAD request first (faster, less bandwidth)
-                async with session.head(check_url, allow_redirects=True) as response:
+                async with session.get(check_url, allow_redirects=True) as response:
                     if response.status == 200:
-                        # If HEAD works, it's good
-                        return True
-                    
-                # If HEAD fails, try GET as fallback
-                async with session.get(check_url, allow_redirects=False) as response:
-                    if response.status == 200:
-                        # Just peek at first few bytes, don't download everything
-                        chunk = await response.content.read(100)
-                        if chunk:
+                        # Read just enough to verify content exists
+                        chunk = await response.content.read(50)
+                        if chunk and len(chunk) > 0:
                             return True
             except:
                 pass
